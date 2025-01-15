@@ -23,6 +23,14 @@ const cf_api = axios.create({
   }
 });
 
+const cf_api = axios.create({
+  baseURL: 'https://api.cloudflare.com/client/v4',
+  headers: {
+    'Authorization': `Bearer ${ENV_VARS.PRIVATE_CLOUDFLARE_ZONE_TOKEN}`,
+    'Content-Type': 'application/json'
+  }
+});
+
 export const POST: RequestHandler = async (event) => {
 
   return authorize(event, {
@@ -34,44 +42,29 @@ export const POST: RequestHandler = async (event) => {
         .match({ id: site_id })
         .single()
 
-      if (!data?.custom_hostname_id) {
-        throw Error('No custom hostname stored')
+      if (status === 'active') {
+        // Connect the domain to the worker
+        const domain_connected = await connect_domain_to_worker(domain_name, zone_id)
+
+        if (domain_connected) {
+          // Rename folder in R2 bucket
+          await rename_r2_folder(site_id, domain_name);
+
+          // Update the site record with the new folder name and custom domain status
+          await supabase_admin
+            .from('sites')
+            .update({
+              custom_domain_connected: true
+            })
+            .match({ id: site_id });
+
+          return json({ success: true, message: 'Domain successfully connected to site and folder renamed' });
+        } else {
+          return json({ success: false, message: 'Failed to connect domain to site' });
+        }
+      } else {
+        return json({ success: false, message: 'Domain is not active yet. Please wait for nameservers to propagate.', status });
       }
-
-      const result = await add_custom_hostname(data.custom_hostname_id)
-
-      // store ssl validation record if not already stored
-      const ssl_validation_record = result.ssl.validation_records?.[0]
-      if (!data.ssl_validation) {
-        await supabase_admin
-          .from('sites')
-          .update({ ssl_validation: ssl_validation_record })
-          .eq('id', site_id)
-      }
-
-      const dns_record_completions = {
-        cname: !result.verification_errors,
-        ssl: result.ssl.status !== 'pending_validation',
-        verification: result.status === 'active'
-      }
-      await supabase_admin
-        .from('sites')
-        .update({ dns_records: dns_record_completions })
-        .eq('id', site_id)
-
-      const completed = dns_record_completions.cname && dns_record_completions.ssl && dns_record_completions.verification
-
-      if (completed) {
-        await rename_r2_folder(site_id, domain_name)
-        await supabase_admin.from('sites').update({ custom_domain_connected: true }).eq('id', site_id)
-      }
-
-      return json({
-        success: completed,
-        dns_record_completions,
-        result,
-        ...ssl_validation_record ? { ssl_validation_record } : {}
-      })
     },
     onerror: async () => {
       console.error('Error connecting domain to worker');

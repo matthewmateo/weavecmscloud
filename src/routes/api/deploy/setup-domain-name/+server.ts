@@ -2,6 +2,7 @@ import { json, error as server_error } from '@sveltejs/kit';
 import type { RequestHandler } from '@sveltejs/kit';
 import supabase_admin from '$lib/supabase/admin';
 import { PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN, PRIVATE_CLOUDFLARE_ZONE_ID, PRIVATE_CLOUDFLARE_HOSTNAMES_TOKEN } from '$env/static/private';
+import { PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN, PRIVATE_CLOUDFLARE_ZONE_ID, PRIVATE_CLOUDFLARE_HOSTNAMES_TOKEN } from '$env/static/private';
 import axios from 'axios';
 import authorize from '../../authorize'
 import Cloudflare from 'cloudflare';
@@ -14,6 +15,7 @@ const cf_api = axios.create({
   baseURL: 'https://api.cloudflare.com/client/v4',
   headers: {
     'Authorization': `Bearer ${PRIVATE_CLOUDFLARE_WORKERS_API_TOKEN}`,
+    // 'Authorization': `Bearer 2SJkDuDvqCILVuPXdWB3u_zrwX5ohbuoikI2MByG`,
     'Content-Type': 'application/json'
   }
 });
@@ -21,7 +23,10 @@ const cf_api = axios.create({
 export const POST: RequestHandler = async (event) => {
   return authorize(event, {
     onsuccess: async ({ site_id, domain_name }) => {
+      console.log({ domain_name })
       const ownership_verification = await setup_domain(domain_name, site_id)
+
+      console.log({ ownership_verification });
 
       return json({ success: true, ownership_verification });
     },
