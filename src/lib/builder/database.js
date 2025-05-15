@@ -40,6 +40,7 @@ export function storage_unsubscribe(fn) {
  *  key: string,
  *  file: File,
  *  options?: object,
+ *  type?: 'image' | 'html'
  * }} payload - The data that changed
  * @return Promise<{{ url: string, size: number }}>
  */

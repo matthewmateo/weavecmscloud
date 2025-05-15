@@ -17,12 +17,14 @@
 	})
 	let loading = $state(false)
 
-	function setValue({ url, size }) {
+	function setValue({ url, size, file_name, file_ext }) {
 		local_value = {
 			...local_value,
 			url: url,
 			src: url,
-			size
+			size,
+			file_name,
+			file_ext
 		}
 	}
 
@@ -48,15 +50,21 @@
 			const { url } = await storageChanged({
 				action: 'upload',
 				key,
-				file: compressedImage
+				file: compressedImage,
+				type: 'image'
 			})
+
+			const file_name = image.name
+			const file_ext = image.name.split('.').pop()
 
 			if (url) {
 				imagePreview = url
 
 				setValue({
 					url,
-					size: Math.floor(image.size / 1024)
+					size: Math.floor(image.size / 1024),
+					file_name,
+					file_ext
 				})
 
 				loading = false

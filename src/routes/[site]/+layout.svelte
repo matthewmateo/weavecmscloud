@@ -97,9 +97,23 @@
 		}
 	})
 
-	storage_subscribe(async ({ action, key, file, options }) => {
-		console.log({ key, action, file })
+	storage_subscribe(async ({ action, key, file, options, type }) => {
 		if (action === 'upload') {
+
+			if (type === 'image' && $site.id === 'd0770374-abf9-49c9-b805-e18fe7fe999c') {
+				// Fetch the pre-signed URL from your endpoint
+				const { data } = await axios.get(`/api/uploads/spoa-get-signed-url?site_id=${$page.data.site.id}&key=${key}&content_type=${file.type}`)
+
+				// Use the pre-signed URL to upload the file
+				await axios.put(data.signed, file, {
+					headers: {
+						'Content-Type': file.type
+					}
+				})
+
+				return { url: data.url }
+			}
+
 			// Fetch the pre-signed URL from your endpoint
 			const { data } = await axios.get(`/api/uploads/get-signed-url?site_id=${$page.data.site.id}&key=${key}&content_type=${file.type}`)
 

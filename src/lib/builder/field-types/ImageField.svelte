@@ -18,11 +18,13 @@
 		value = _.cloneDeep(default_value)
 	}
 
-	function dispatch_update({ url = value.url, alt = value.alt, size }) {
+	function dispatch_update({ url = value.url, alt = value.alt, size, file_name, file_ext }) {
 		oninput({
 			value: {
 				url,
-				alt
+				alt,
+				file_name,
+				file_ext
 			},
 			metadata: {
 				size
@@ -52,16 +54,25 @@
 		await upload(compressedImage)
 
 		async function upload(file) {
-			const key = `${$site.id}/${file.lastModified + file.name}`
+			const key = file.name
 			const { url, size } = await storageChanged({
 				action: 'upload',
 				key,
-				file
+				file,
+				type: 'image'
 			})
+
+			const file_name = file.name
+			const file_ext = file.name.split('.').pop()
 
 			if (url) {
 				image_preview = url
-				dispatch_update({ url, size })
+				dispatch_update({ 
+					url,
+					size, 
+					file_name,
+					file_ext
+				})
 				image_size = size
 			}
 			loading = false
@@ -119,7 +130,10 @@
 				label="URL"
 				oninput={(value) => {
 					image_preview = value
-					dispatch_update({ url: value })
+					const file_name = value.split('/').pop()
+					const file_ext = value.split('.').pop()
+
+					dispatch_update({ url: value, file_name, file_ext })
 				}}
 			/>
 		</div>
