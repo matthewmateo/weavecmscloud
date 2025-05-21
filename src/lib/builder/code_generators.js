@@ -113,7 +113,7 @@ export async function page_html({ page = get(active_page), site = get(activeSite
  <!DOCTYPE html>
  <html lang="${locale}">
    <head>
-     <meta name="generator" content="WeaveCMS" />
+     <meta name="generator" content="PalaCMS" />
      ${res.head}
      <style>${res.css}</style>
    </head>
