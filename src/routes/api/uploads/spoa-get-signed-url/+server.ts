@@ -12,8 +12,8 @@ const s3_client = new S3Client({
   endpoint: `https://${ENV_VARS.PRIVATE_SPOA_CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId: ENV_VARS.PRIVATE_SPOA_R2_ACCESS_KEY_ID,
-    secretAccessKey: ENV_VARS.PRIVATE_R2_SECRET_ACCESS_KEY
-  },
+    secretAccessKey: ENV_VARS.PRIVATE_SPOA_R2_SECRET_ACCESS_KEY
+  }
 });
 
 export const GET: RequestHandler = async (event) => {
